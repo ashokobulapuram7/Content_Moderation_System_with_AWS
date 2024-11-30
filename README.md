@@ -11,12 +11,8 @@ The application is built using modern technologies like React.js for the fronten
 - [Features](#features)
 - [Tech Stack](#Tech-stack)
 - [Architecture](#architecture)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Technologies Used](#technologies-used)
+- [Access Website](#Access-Website)
 - [Screenshots](#screenshots)
-- [Contributing](#contributing)
-- [License](#license)
 
 ---
 
@@ -64,10 +60,9 @@ The frontend queries DynamoDB through an API Gateway endpoint to retrieve and di
 
 ---
 
-## Installation
+## Access Website
 
-Follow these steps to set up the project locally:
+You can Access the website using the following link.
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/your-username/content-moderation-app.git
+https://main.d1edxzmedbu1wl.amplifyapp.com/home
+
