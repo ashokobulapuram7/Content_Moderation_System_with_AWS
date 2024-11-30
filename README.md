@@ -56,7 +56,8 @@ Moderation results are stored in Amazon DynamoDB.
 - Results Display:
 The frontend queries DynamoDB through an API Gateway endpoint to retrieve and display the results.
 
-![Architecture Diagram](docs/architecture-diagram.png)
+![Architecture Diagram]![Final_AWS_Architecture](https://github.com/user-attachments/assets/c5625692-8586-4a5f-a2ca-5f98fe5c0826)
+
 
 ---
 
