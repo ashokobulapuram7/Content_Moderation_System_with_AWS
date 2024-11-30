@@ -35,7 +35,7 @@ The application is built using modern technologies like React.js for the fronten
 - React.js: Dynamic and responsive UI with routing and state management.
 - CSS: Custom styling for an intuitive user experience.
 - AWS Amplify: Frontend deployment and CI/CD management.
-- 
+  
 **Backend:**
 - Amazon S3: File storage and event triggering for backend workflows.
 - AWS Rekognition: Moderation engine to analyze images and videos.
@@ -46,12 +46,19 @@ The application is built using modern technologies like React.js for the fronten
 ---
 
 ## Architecture
-The application follows a microservices-based architecture leveraging AWS cloud services. Below is a high-level overview:
 
-- **Frontend**: React app for the user interface.
-- **Backend**: AWS API Gateway and Lambda functions.
-- **Storage**: S3 bucket for storing uploaded files.
-- **Moderation**: AWS Rekognition for content analysis.
+The system leverages a serverless architecture to ensure scalability, reliability, and minimal maintenance. Here's a summary of the flow:
+
+- Frontend: Users upload files via the React.js interface.
+- File Upload:
+Files are sent to an API Gateway, which triggers an AWS Lambda function.
+The Lambda function uploads the files to Amazon S3.
+- Moderation:
+An S3 upload event triggers another Lambda function.
+The Lambda function uses AWS Rekognition to analyze the file for inappropriate or sensitive content.
+Moderation results are stored in Amazon DynamoDB.
+- Results Display:
+The frontend queries DynamoDB through an API Gateway endpoint to retrieve and display the results.
 
 ![Architecture Diagram](docs/architecture-diagram.png)
 
