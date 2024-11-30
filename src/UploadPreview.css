@@ -1,0 +1,303 @@
+/* General upload card styling */
+.upload-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6a82fb, #fc5c7d);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  margin: 20px 0;
+}
+
+/* Upload area styling */
+.upload-area {
+  border: 2px dashed rgba(255, 255, 255, 0.7);
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+  cursor: pointer;
+  color: white;
+  width: 85%;
+  max-width: 350px;
+}
+
+.file-previews {
+  margin-top: 20px;
+}
+
+.file-preview img,
+.file-preview video {
+  max-width: 100%;
+  border-radius: 8px;
+  margin-top: 10px;
+  max-height: 200px;
+  object-fit: cover;
+}
+
+.upload-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.upload-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Remove button styling */
+.remove-btn {
+  background-color: #ff4b5c;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.remove-btn:hover {
+  background-color: #ff1c2e;
+}
+
+/* Progress bar styling */
+.progress-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.progress-bar {
+  width: 80%;
+  height: 8px;
+  background: linear-gradient(90deg, #6a82fb, #fc5c7d);
+  border-radius: 4px;
+  animation: progressAnimation 5s infinite;
+  margin-bottom: 10px;
+}
+
+@keyframes progressAnimation {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+/* Table adjustments */
+.moderation-results table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.moderation-results th,
+.moderation-results td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+  word-wrap: break-word;
+}
+
+.moderation-results th {
+  background-color: #141230;
+  color: #f0f4f8;
+}
+
+.moderation-results td {
+  color: #333;
+}
+
+/* Notification popup styling */
+.notification-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #0c1a2b;
+  color: #ffffff;
+  border-radius: 16px;
+  padding: 20px 25px;
+  max-width: 300px;
+  text-align: center;
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  animation: fadeIn 0.4s forwards;
+  z-index: 1000;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.notification-popup p {
+  font-size: 16px;
+  color: #d1d5db;
+  margin: 0 0 15px;
+  font-weight: 500;
+}
+
+.close-button {
+  background: linear-gradient(135deg, #4a5568, #2d3748);
+  color: #ffffff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.close-button:hover {
+  background: linear-gradient(135deg, #2d3748, #1a202c);
+  transform: scale(1.05);
+}
+
+/* Error message styling */
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* Responsive Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7); /* Darker overlay for better focus */
+  display: flex;
+  flex-direction: column; /* Vertical alignment for spinner and text */
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px; /* Add padding for smaller screens */
+}
+
+/* Enhanced Spinner */
+.loader {
+  border: 8px solid rgba(255, 255, 255, 0.2); /* Subtle outer border */
+  border-top: 8px solid #6a82fb; /* Gradient blue for the spinner */
+  border-radius: 50%;
+  width: 60px; /* Adjusted for better responsiveness */
+  height: 60px; /* Adjusted for better responsiveness */
+  animation: spin 1s linear infinite;
+}
+
+/* Spinner Animation */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Loading Text Styling */
+.loading-text {
+  margin-top: 20px;
+  color: #0acbe5; /* Light blue text */
+  font-size: 18px;
+  font-weight: 600; /* Bolder font for emphasis */
+  text-align: center;
+  max-width: 80%; /* Responsive width for smaller screens */
+  line-height: 1.5; /* Better readability */
+  animation: fadeIn 0.5s ease-in-out; /* Smooth fade-in effect */
+}
+
+/* Fade-in Animation for Text */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Status Messages */
+.approved-message {
+  text-align: center;
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.in-progress-message {
+  text-align: center;
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+/* Responsive styling */
+@media (max-width: 768px) {
+  .upload-card {
+    width: 90%;
+  }
+
+  .file-preview video,
+  .file-preview img {
+    max-width: 90%;
+  }
+}
+
+@media (max-width: 480px) {
+  .upload-card {
+    width: 95%;
+    padding: 10px;
+  }
+
+  button {
+    width: 100%;
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  .upload-area {
+    padding: 15px;
+    font-size: 14px;
+    width: 100%;
+    max-width: 250px;
+  }
+
+  .file-preview-only {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+
+  .file-preview video,
+  .file-preview img {
+    max-width: 100%;
+    max-height: 200px;
+  }
+}
