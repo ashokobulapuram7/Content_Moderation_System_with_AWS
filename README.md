@@ -58,7 +58,7 @@ The frontend queries DynamoDB through an API Gateway endpoint to retrieve and di
 
 
 
-[Final_AWS_Architecture](https://github.com/user-attachments/assets/c5625692-8586-4a5f-a2ca-5f98fe5c0826)
+![Final_AWS_Architecture](https://github.com/user-attachments/assets/c5625692-8586-4a5f-a2ca-5f98fe5c0826)
 
 
 
