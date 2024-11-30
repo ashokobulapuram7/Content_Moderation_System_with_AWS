@@ -9,7 +9,7 @@ The application is built using modern technologies like React.js for the fronten
 
 ## Table of Contents
 - [Features](#features)
-- [Tech Stack](#Tech-stcak)
+- [Tech Stack](#Tech-stack)
 - [Architecture](#architecture)
 - [Installation](#installation)
 - [Usage](#usage)
@@ -31,16 +31,16 @@ The application is built using modern technologies like React.js for the fronten
 ---
 
 ## Tech Stack
-**Frontend:**
-React.js: Dynamic and responsive UI with routing and state management.
-CSS: Custom styling for an intuitive user experience.
-AWS Amplify: Frontend deployment and CI/CD management.
-**Backend:**
-Amazon S3: File storage and event triggering for backend workflows.
-AWS Rekognition: Moderation engine to analyze images and videos.
-AWS Lambda: Serverless backend for file processing and database integration.
-Amazon DynamoDB: Storage of metadata and moderation results.
-Amazon API Gateway: Routing requests between the frontend and backend.
+- **Frontend:**
+- React.js: Dynamic and responsive UI with routing and state management.
+- CSS: Custom styling for an intuitive user experience.
+- AWS Amplify: Frontend deployment and CI/CD management.
+-**Backend:**
+- Amazon S3: File storage and event triggering for backend workflows.
+- AWS Rekognition: Moderation engine to analyze images and videos.
+- AWS Lambda: Serverless backend for file processing and database integration.
+- Amazon DynamoDB: Storage of metadata and moderation results.
+- Amazon API Gateway: Routing requests between the frontend and backend.
 
 ---
 
