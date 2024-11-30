@@ -66,3 +66,14 @@ You can Access the website using the following link.
 
 https://main.d1edxzmedbu1wl.amplifyapp.com/home
 
+## Screenshots
+![image](https://github.com/user-attachments/assets/7b4cad2b-c556-4216-9ae1-a2232722ab5a)
+![image](https://github.com/user-attachments/assets/a114e05e-2235-4c90-abd8-a96f093e2ddb)
+![image](https://github.com/user-attachments/assets/7ebe9693-4a88-447a-ac6f-17e42415dce5)
+![image](https://github.com/user-attachments/assets/c8befbb4-6756-4165-ae6f-b1875047ebf2)
+![image](https://github.com/user-attachments/assets/30b232ea-2342-4ac4-8e0c-639cbb36c102)
+
+
+
+
+
