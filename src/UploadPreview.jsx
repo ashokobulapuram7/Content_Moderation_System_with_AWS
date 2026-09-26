@@ -49,7 +49,7 @@ const parseMp4Duration = (arrayBuffer) => {
 
       if (atomSize === 1) {
         if (offset + 16 > end) return null;
-        atomSize = view.getUint32(offset + 12);
+        atomSize = view.getUint32(offset + 8) * 2 ** 32 + view.getUint32(offset + 12);
         headerSize = 16;
       } else if (atomSize === 0) {
         atomSize = end - offset;
@@ -177,6 +177,13 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
     previewFile(file);
   };
 
+  const clearPreview = () => {
+    if (currentPreviewUrlRef.current) {
+      URL.revokeObjectURL(currentPreviewUrlRef.current);
+      currentPreviewUrlRef.current = null;
+    }
+  };
+
   const previewFile = (file) => {
     clearPreview();
 
@@ -198,13 +205,6 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
       return parseMp4Duration(await file.arrayBuffer());
     } catch {
       return null;
-    }
-  };
-
-  const clearPreview = () => {
-    if (currentPreviewUrlRef.current) {
-      URL.revokeObjectURL(currentPreviewUrlRef.current);
-      currentPreviewUrlRef.current = null;
     }
   };
 
@@ -390,7 +390,7 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
       </div>
 
       {!isUploading && (
-        <button onClick={handleUploadToAPI} className="upload-btn" disabled={!uploadedFile || polling} aria-busy={polling}>
+        <button onClick={handleUploadToAPI} className="upload-btn" disabled={!uploadedFile || isUploading || polling} aria-busy={polling}>
           {polling ? 'Waiting for Results...' : 'Upload'}
         </button>
       )}
