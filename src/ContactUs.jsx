@@ -1,5 +1,22 @@
-import React, { useState } from 'react';
-import './ContactUs.css'; // Ensure to import the CSS file
+import React, { useEffect, useRef, useState } from 'react';
+import './ContactUs.css';
+
+const CONTACT_TIMEOUT_MS = 10000;
+const MAX_NAME_LENGTH = 80;
+const MAX_EMAIL_LENGTH = 254;
+const MAX_MESSAGE_LENGTH = 1000;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const getSafeEndpoint = (value) => {
+  if (!value || typeof value !== 'string') return null;
+
+  try {
+    const url = new URL(value.trim());
+    return ['http:', 'https:'].includes(url.protocol) ? url.toString() : null;
+  } catch {
+    return null;
+  }
+};
 
 const ContactUs = () => {
   const [name, setName] = useState('');
@@ -7,44 +24,97 @@ const ContactUs = () => {
   const [message, setMessage] = useState('');
   const [popupMessage, setPopupMessage] = useState('');
   const [popupType, setPopupType] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const popupTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (popupTimeoutRef.current) {
+        clearTimeout(popupTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const showPopup = (text, type) => {
+    setPopupMessage(text);
+    setPopupType(type);
+    if (popupTimeoutRef.current) {
+      clearTimeout(popupTimeoutRef.current);
+    }
+    popupTimeoutRef.current = setTimeout(() => {
+      setPopupMessage('');
+    }, 5000);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const apiUrl = process.env.REACT_APP_AWS_API_CONTACT_ENDPOINT;
+    if (isSubmitting) return;
 
-      const response = await fetch(`${apiUrl}`, {
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    const trimmedMessage = message.trim();
+
+    if (!trimmedName || !trimmedEmail || !trimmedMessage) {
+      showPopup('Please complete all fields before sending your message.', 'error');
+      return;
+    }
+
+    if (
+      trimmedName.length > MAX_NAME_LENGTH ||
+      trimmedEmail.length > MAX_EMAIL_LENGTH ||
+      trimmedMessage.length > MAX_MESSAGE_LENGTH ||
+      !EMAIL_PATTERN.test(trimmedEmail)
+    ) {
+      showPopup('Please check your name, email, and message length before trying again.', 'error');
+      return;
+    }
+
+    const apiUrl = getSafeEndpoint(process.env.REACT_APP_AWS_API_CONTACT_ENDPOINT);
+    if (!apiUrl) {
+      showPopup('The contact service is not configured correctly. Please try again later.', 'error');
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), CONTACT_TIMEOUT_MS);
+
+    try {
+      setIsSubmitting(true);
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name,
-          email,
-          message,
+          name: trimmedName,
+          email: trimmedEmail,
+          message: trimmedMessage,
         }),
+        signal: controller.signal,
       });
 
-      const responseData = await response.json();
+      let responseData = {};
+      try {
+        responseData = await response.json();
+      } catch {
+        responseData = {};
+      }
 
       if (response.ok) {
-        setPopupMessage(`Message sent successfully! We will respond to your case shortly.Your Case ID is: ${responseData.caseId}`);
-        setPopupType('success');
+        const caseId = responseData && responseData.caseId ? ` Your Case ID is: ${responseData.caseId}` : '';
+        showPopup(`Message sent successfully! We will respond to your case shortly.${caseId}`, 'success');
         setName('');
         setEmail('');
         setMessage('');
       } else {
-        setPopupMessage(`Failed to send message: ${responseData.error || 'Unknown error.'}`);
-        setPopupType('error');
+        showPopup('Failed to send message. Please try again later.', 'error');
       }
     } catch {
-      setPopupMessage('An error occurred while sending your message. Please try again.');
-      setPopupType('error');
+      showPopup('An error occurred while sending your message. Please try again.', 'error');
+    } finally {
+      clearTimeout(timeoutId);
+      setIsSubmitting(false);
     }
-
-    setTimeout(() => {
-      setPopupMessage('');
-    }, 5000); // Popup disappears after 3 seconds
   };
 
   return (
@@ -64,6 +134,7 @@ const ContactUs = () => {
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            maxLength={MAX_NAME_LENGTH}
             required
           />
 
@@ -73,6 +144,7 @@ const ContactUs = () => {
             id="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            maxLength={MAX_EMAIL_LENGTH}
             required
           />
 
@@ -81,10 +153,13 @@ const ContactUs = () => {
             id="message"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            maxLength={MAX_MESSAGE_LENGTH}
             required
           ></textarea>
 
-          <button type="submit" className="submit-button">Send Message</button>
+          <button type="submit" className="submit-button" disabled={isSubmitting} aria-busy={isSubmitting}>
+            {isSubmitting ? 'Sending...' : 'Send Message'}
+          </button>
         </form>
       </div>
 
