@@ -29,7 +29,7 @@ Recommended validation:
 - Require a JSON object with only the expected fields: `file_type`, `file_size`, `file_name`, and `file_content`.
 - Reject missing, extra, malformed, or incorrectly typed fields.
 - Enforce a maximum Base64 string length before decoding.
-- Validate Base64 format and reject malformed input.
+- Validate Base64 format and reject malformed input. If clients may insert whitespace or newlines, normalize or reject that input consistently before decoding; do not rely on `Buffer.from(..., 'base64')` alone because it can ignore some invalid characters.
 - Decode the file and enforce the decoded byte limit, currently 4 MB.
 - Check file signatures/magic bytes for JPEG, PNG, and MP4 instead of trusting MIME type or extension.
 - Allow only expected content types and extensions: `.jpg`, `.jpeg`, `.png`, and `.mp4`.

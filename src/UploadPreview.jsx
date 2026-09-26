@@ -3,7 +3,7 @@ import './UploadPreview.css';
 import { getSafeEndpoint } from './utils/endpoints';
 
 const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
-const VIDEO_REJECT_DURATION_SECONDS = 11;
+const MAX_VIDEO_DURATION_SECONDS = 10;
 const ALLOWED_FILE_TYPES = new Set(['image/jpeg', 'image/png', 'video/mp4']);
 const ALLOWED_FILE_EXTENSIONS = new Map([
   ['image/jpeg', ['.jpg', '.jpeg']],
@@ -28,6 +28,67 @@ const hasAllowedExtension = (file) => {
   const allowedExtensions = ALLOWED_FILE_EXTENSIONS.get(file.type) || [];
   const lowerName = file.name.toLowerCase();
   return allowedExtensions.some((extension) => lowerName.endsWith(extension));
+};
+
+const readAtomType = (view, offset) => String.fromCharCode(
+  view.getUint8(offset),
+  view.getUint8(offset + 1),
+  view.getUint8(offset + 2),
+  view.getUint8(offset + 3)
+);
+
+const parseMp4Duration = (arrayBuffer) => {
+  const view = new DataView(arrayBuffer);
+
+  const findDuration = (start, end) => {
+    let offset = start;
+    while (offset + 8 <= end) {
+      let atomSize = view.getUint32(offset);
+      const atomType = readAtomType(view, offset + 4);
+      let headerSize = 8;
+
+      if (atomSize === 1) {
+        if (offset + 16 > end) return null;
+        atomSize = view.getUint32(offset + 12);
+        headerSize = 16;
+      } else if (atomSize === 0) {
+        atomSize = end - offset;
+      }
+
+      if (atomSize < headerSize || offset + atomSize > end) return null;
+
+      const payloadStart = offset + headerSize;
+      const payloadEnd = offset + atomSize;
+      if (atomType === 'mvhd') {
+        const version = view.getUint8(payloadStart);
+        const timescaleOffset = version === 1 ? payloadStart + 20 : payloadStart + 12;
+        const durationOffset = version === 1 ? payloadStart + 24 : payloadStart + 16;
+        if (version === 1) {
+          if (durationOffset + 8 > payloadEnd) return null;
+          const timescale = view.getUint32(timescaleOffset);
+          const high = view.getUint32(durationOffset);
+          const low = view.getUint32(durationOffset + 4);
+          const duration = high * 2 ** 32 + low;
+          return timescale > 0 ? duration / timescale : null;
+        }
+        if (durationOffset + 4 > payloadEnd) return null;
+        const timescale = view.getUint32(timescaleOffset);
+        const duration = view.getUint32(durationOffset);
+        return timescale > 0 ? duration / timescale : null;
+      }
+
+      if (atomType === 'moov') {
+        const nestedDuration = findDuration(payloadStart, payloadEnd);
+        if (nestedDuration !== null) return nestedDuration;
+      }
+
+      offset += atomSize;
+    }
+
+    return null;
+  };
+
+  return findDuration(0, view.byteLength);
 };
 
 const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
@@ -106,7 +167,7 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
         setUploadedFile(null);
         return;
       }
-      if (duration >= VIDEO_REJECT_DURATION_SECONDS) {
+      if (duration > MAX_VIDEO_DURATION_SECONDS) {
         setIsOversizedVideo(true);
         setUploadedFile(null);
         return;
@@ -117,9 +178,7 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
   };
 
   const previewFile = (file) => {
-    if (currentPreviewUrlRef.current) {
-      URL.revokeObjectURL(currentPreviewUrlRef.current);
-    }
+    clearPreview();
 
     const previewUrl = URL.createObjectURL(file);
     currentPreviewUrlRef.current = previewUrl;
@@ -134,38 +193,24 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
     if (onUpload) onUpload(filePreview);
   };
 
-  const getVideoDuration = (file) => {
-    return new Promise((resolve) => {
-      const video = document.createElement('video');
-      const objectUrl = URL.createObjectURL(file);
-
-      const cleanup = () => {
-        URL.revokeObjectURL(objectUrl);
-        video.removeAttribute('src');
-        video.load();
-      };
-
-      video.preload = 'metadata';
-      video.onloadedmetadata = () => {
-        const duration = video.duration;
-        cleanup();
-        resolve(duration);
-      };
-      video.onerror = () => {
-        cleanup();
-        resolve(null);
-      };
-      // lgtm[js/xss-through-dom] objectUrl is a browser-generated blob URL for local file metadata.
-      video.src = objectUrl;
-    });
+  const getVideoDuration = async (file) => {
+    try {
+      return parseMp4Duration(await file.arrayBuffer());
+    } catch {
+      return null;
+    }
   };
 
-  const removeFile = () => {
-    clearPollingTimer();
+  const clearPreview = () => {
     if (currentPreviewUrlRef.current) {
       URL.revokeObjectURL(currentPreviewUrlRef.current);
       currentPreviewUrlRef.current = null;
     }
+  };
+
+  const removeFile = () => {
+    clearPollingTimer();
+    clearPreview();
     setUploadedFile(null);
     setModerationResults(null);
     setDetailed([]);
@@ -239,11 +284,10 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
     clearPollingTimer();
     setPolling(true);
     let attempts = 0;
+    const url = new URL(AWSresultsEndpoint);
+    url.searchParams.set('content_id', contentId);
 
     const poll = () => {
-      const url = new URL(AWSresultsEndpoint);
-      url.searchParams.set('content_id', contentId);
-
       fetchWithTimeout(url.toString(), {
         method: 'GET',
         headers: {

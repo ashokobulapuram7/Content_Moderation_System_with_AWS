@@ -17,6 +17,7 @@ const ContactUs = () => {
   const [popupType, setPopupType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const popupTimeoutRef = useRef(null);
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -40,7 +41,7 @@ const ContactUs = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    if (isSubmittingRef.current) return;
 
     const trimmedName = name.trim();
     const trimmedEmail = email.trim();
@@ -71,6 +72,7 @@ const ContactUs = () => {
     const timeoutId = setTimeout(() => controller.abort(), CONTACT_TIMEOUT_MS);
 
     try {
+      isSubmittingRef.current = true;
       setIsSubmitting(true);
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -105,6 +107,7 @@ const ContactUs = () => {
       showPopup('An error occurred while sending your message. Please try again.', 'error');
     } finally {
       clearTimeout(timeoutId);
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   };
