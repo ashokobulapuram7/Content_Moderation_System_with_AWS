@@ -1,22 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './ContactUs.css';
+import { getSafeEndpoint } from './utils/endpoints';
 
 const CONTACT_TIMEOUT_MS = 10000;
+const POPUP_DISMISS_MS = 5000;
 const MAX_NAME_LENGTH = 80;
 const MAX_EMAIL_LENGTH = 254;
 const MAX_MESSAGE_LENGTH = 1000;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const getSafeEndpoint = (value) => {
-  if (!value || typeof value !== 'string') return null;
-
-  try {
-    const url = new URL(value.trim());
-    return ['http:', 'https:'].includes(url.protocol) ? url.toString() : null;
-  } catch {
-    return null;
-  }
-};
 
 const ContactUs = () => {
   const [name, setName] = useState('');
@@ -43,7 +34,8 @@ const ContactUs = () => {
     }
     popupTimeoutRef.current = setTimeout(() => {
       setPopupMessage('');
-    }, 5000);
+      setPopupType('');
+    }, POPUP_DISMISS_MS);
   };
 
   const handleSubmit = async (e) => {

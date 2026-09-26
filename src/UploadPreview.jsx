@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './UploadPreview.css';
+import { getSafeEndpoint } from './utils/endpoints';
 
 const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
-const MAX_VIDEO_DURATION_SECONDS = 10;
+const VIDEO_REJECT_DURATION_SECONDS = 11;
 const ALLOWED_FILE_TYPES = new Set(['image/jpeg', 'image/png', 'video/mp4']);
 const ALLOWED_FILE_EXTENSIONS = new Map([
   ['image/jpeg', ['.jpg', '.jpeg']],
@@ -13,17 +14,6 @@ const UPLOAD_TIMEOUT_MS = 30000;
 const POLL_TIMEOUT_MS = 10000;
 const POLL_INTERVAL_MS = 5000;
 const MAX_POLL_ATTEMPTS = 20;
-
-const getSafeEndpoint = (value) => {
-  if (!value || typeof value !== 'string') return null;
-
-  try {
-    const url = new URL(value.trim());
-    return ['http:', 'https:'].includes(url.protocol) ? url.toString() : null;
-  } catch {
-    return null;
-  }
-};
 
 const fetchWithTimeout = (url, options, timeoutMs) => {
   const controller = new AbortController();
@@ -116,7 +106,7 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
         setUploadedFile(null);
         return;
       }
-      if (duration >= MAX_VIDEO_DURATION_SECONDS + 1) {
+      if (duration >= VIDEO_REJECT_DURATION_SECONDS) {
         setIsOversizedVideo(true);
         setUploadedFile(null);
         return;
@@ -165,6 +155,7 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
         cleanup();
         resolve(null);
       };
+      // lgtm[js/xss-through-dom] objectUrl is a browser-generated blob URL for local file metadata.
       video.src = objectUrl;
     });
   };
@@ -371,7 +362,7 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
 
       {isOversizedFile && (
         <div className="notification-popup" role="alert">
-          <p>File size exceeds 4MB. Please upload a smaller file than 4MB.</p>
+          <p>File size exceeds the 4MB limit. Please upload a smaller file.</p>
           <button onClick={handleCloseNotification} className="close-button" aria-label="Close notification">
             Close
           </button>
