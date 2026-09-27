@@ -19,7 +19,7 @@ The application is built using modern technologies like React.js for the fronten
 ## Features
 - Image and Video Upload: Allows users to upload files via a clean and user-friendly interface.
 - Content Moderation: Analyzes files for sensitive or explicit content using AWS Rekognition.
-- Real-Time Results: Displays moderation results (approved or flagged) with confidence scores and labels.
+- Real-Time Results: Displays moderation results (Approved or Flagged) with confidence scores and labels.
 - File Size and Format Validation: Ensures files meet size (<4 MB) and format (JPG, PNG, MP4) requirements.
 - Dark Mode Support: Provides a dark mode for enhanced user experience.
 - Scalable Architecture: Built using AWS Lambda, S3, Rekognition, API Gateway, and DynamoDB for high performance and cost efficiency.
@@ -45,7 +45,7 @@ The application is built using modern technologies like React.js for the fronten
 
 The system leverages a serverless architecture to ensure scalability, reliability, and minimal maintenance. Here's a summary of the flow:
 
-- Frontend: Users upload files via the API.
+- Frontend: Users upload files via the React.js interface.
 - File Upload:
 Files are sent to an API Gateway, which triggers an AWS Lambda function.
 The Lambda function uploads the files to Amazon S3.
