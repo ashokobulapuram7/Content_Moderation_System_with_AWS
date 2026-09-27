@@ -45,7 +45,7 @@ The application is built using modern technologies like React.js for the fronten
 
 The system leverages a serverless architecture to ensure scalability, reliability, and minimal maintenance. Here's a summary of the flow:
 
-- Frontend: Users upload files via the React.js interface.
+- Frontend: Users upload files via the API.
 - File Upload:
 Files are sent to an API Gateway, which triggers an AWS Lambda function.
 The Lambda function uploads the files to Amazon S3.
@@ -78,3 +78,12 @@ https://main.d1edxzmedbu1wl.amplifyapp.com/home
 ![image](https://github.com/user-attachments/assets/a114e05e-2235-4c90-abd8-a96f093e2ddb)
 
 ![image](https://github.com/user-attachments/assets/7ebe9693-4a88-447a-ac6f-17e42415dce5)
+
+![image](https://github.com/user-attachments/assets/c8befbb4-6756-4165-ae6f-b1875047ebf2)
+
+![image](https://github.com/user-attachments/assets/30b232ea-2342-4ac4-8e0c-639cbb36c102)
+
+
+
+
+
