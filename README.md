@@ -41,12 +41,6 @@ The application is built using modern technologies like React.js for the fronten
 
 ---
 
-## Security note
-
-This repository contains the React frontend only. The Amplify-provided `REACT_APP_*` API Gateway URLs are public in the static browser build and must not contain AWS credentials, shared API keys, or secrets. Review [SECURITY.md](SECURITY.md) for the backend validation, API Gateway, Lambda, S3, monitoring, and abuse-control checklist that must be applied separately in AWS or infrastructure-as-code.
-
----
-
 ## Architecture
 
 The system leverages a serverless architecture to ensure scalability, reliability, and minimal maintenance. Here's a summary of the flow:
@@ -84,12 +78,3 @@ https://main.d1edxzmedbu1wl.amplifyapp.com/home
 ![image](https://github.com/user-attachments/assets/a114e05e-2235-4c90-abd8-a96f093e2ddb)
 
 ![image](https://github.com/user-attachments/assets/7ebe9693-4a88-447a-ac6f-17e42415dce5)
-
-![image](https://github.com/user-attachments/assets/c8befbb4-6756-4165-ae6f-b1875047ebf2)
-
-![image](https://github.com/user-attachments/assets/30b232ea-2342-4ac4-8e0c-639cbb36c102)
-
-
-
-
-
