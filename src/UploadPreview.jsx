@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './UploadPreview.css';
 import { getSafeEndpoint } from './utils/endpoints';
 
@@ -83,6 +83,9 @@ const parseMp4Duration = (arrayBuffer) => {
 const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
   const fileInputRef = useRef(null);
   const pollTimeoutRef = useRef(null);
+  const pollAbortControllerRef = useRef(null);
+  const uploadAbortControllerRef = useRef(null);
+  const fileReaderRef = useRef(null);
   const currentPreviewUrlRef = useRef(null);
   const [moderationResults, setModerationResults] = useState(null);
   const [isOversizedVideo, setIsOversizedVideo] = useState(false);
@@ -96,21 +99,56 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
   const AWSuploadEndpoint = getSafeEndpoint(process.env.REACT_APP_AWS_API_UPLOAD_ENDPOINT);
   const AWSresultsEndpoint = getSafeEndpoint(process.env.REACT_APP_AWS_API_RESULTS_ENDPOINT);
 
-  const clearPollingTimer = () => {
+  const clearPollingTimer = useCallback(() => {
     if (pollTimeoutRef.current) {
       clearTimeout(pollTimeoutRef.current);
       pollTimeoutRef.current = null;
     }
-  };
+    if (pollAbortControllerRef.current) {
+      pollAbortControllerRef.current.abort();
+      pollAbortControllerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (uploadedFile?.file && uploadedFile.src !== currentPreviewUrlRef.current) {
+      if (currentPreviewUrlRef.current) {
+        URL.revokeObjectURL(currentPreviewUrlRef.current);
+      }
+      const previewUrl = URL.createObjectURL(uploadedFile.file);
+      currentPreviewUrlRef.current = previewUrl;
+      setUploadedFile((currentFile) => (
+        currentFile?.file === uploadedFile.file
+          ? { ...currentFile, src: previewUrl }
+          : currentFile
+      ));
+    }
+  }, [uploadedFile, setUploadedFile]);
+
+  const cancelUpload = useCallback(() => {
+    if (fileReaderRef.current) {
+      const reader = fileReaderRef.current;
+      fileReaderRef.current = null;
+      if (reader.readyState === FileReader.LOADING) {
+        reader.abort();
+      }
+    }
+    if (uploadAbortControllerRef.current) {
+      uploadAbortControllerRef.current.abort();
+      uploadAbortControllerRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     return () => {
       clearPollingTimer();
+      cancelUpload();
       if (currentPreviewUrlRef.current) {
         URL.revokeObjectURL(currentPreviewUrlRef.current);
+        currentPreviewUrlRef.current = null;
       }
     };
-  }, []);
+  }, [cancelUpload, clearPollingTimer]);
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -199,6 +237,7 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
 
   const removeFile = () => {
     clearPollingTimer();
+    cancelUpload();
     clearPreview();
     setUploadedFile(null);
     setModerationResults(null);
@@ -221,7 +260,10 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
     setConfigurationError(false);
 
     const reader = new FileReader();
+    fileReaderRef.current = reader;
     reader.onloadend = () => {
+      if (fileReaderRef.current !== reader) return;
+      fileReaderRef.current = null;
       const base64Content = typeof reader.result === 'string' ? reader.result.split(',')[1] : null;
       if (!base64Content) {
         setGeneralError(true);
@@ -236,26 +278,39 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
         file_content: base64Content,
       };
 
+      const uploadController = new AbortController();
+      uploadAbortControllerRef.current = uploadController;
       fetch(AWSuploadEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(fileData),
+        signal: uploadController.signal,
       })
         .then((response) => {
           if (!response.ok) throw new Error('Upload failed');
           return response.json();
         })
         .then((data) => {
+          if (uploadController.signal.aborted) return;
+          if (uploadAbortControllerRef.current === uploadController) {
+            uploadAbortControllerRef.current = null;
+          }
           const parsedData = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
           const contentId = parsedData && parsedData.content_id;
           startPolling(contentId);
         })
         .catch(() => {
+          if (uploadController.signal.aborted) return;
+          if (uploadAbortControllerRef.current === uploadController) {
+            uploadAbortControllerRef.current = null;
+          }
           setGeneralError(true);
           setIsUploading(false);
         });
     };
     reader.onerror = () => {
+      if (fileReaderRef.current !== reader) return;
+      fileReaderRef.current = null;
       setGeneralError(true);
       setIsUploading(false);
     };
@@ -277,17 +332,21 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
     url.searchParams.set('content_id', contentId);
 
     const poll = () => {
+      const pollController = new AbortController();
+      pollAbortControllerRef.current = pollController;
       fetch(url.toString(), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
+        signal: pollController.signal,
       })
         .then((response) => {
           if (!response.ok) throw new Error('Polling failed');
           return response.json();
         })
         .then((data) => {
+          if (pollController.signal.aborted) return;
           const moderationStatus = data && data.moderationStatus;
           const labels = data && data.DetailedLabels ? JSON.parse(data.DetailedLabels) : [];
 
@@ -304,7 +363,10 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
             setIsUploading(false);
           } else if (attempts < MAX_POLL_ATTEMPTS) {
             attempts++;
-            pollTimeoutRef.current = setTimeout(poll, POLL_INTERVAL_MS);
+            pollTimeoutRef.current = setTimeout(() => {
+              pollTimeoutRef.current = null;
+              poll();
+            }, POLL_INTERVAL_MS);
           } else {
             clearPollingTimer();
             setGeneralError(true);
@@ -313,6 +375,7 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
           }
         })
         .catch(() => {
+          if (pollController.signal.aborted) return;
           clearPollingTimer();
           setGeneralError(true);
           setPolling(false);
@@ -320,7 +383,10 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
         });
     };
 
-    pollTimeoutRef.current = setTimeout(poll, POLL_INTERVAL_MS);
+    pollTimeoutRef.current = setTimeout(() => {
+      pollTimeoutRef.current = null;
+      poll();
+    }, POLL_INTERVAL_MS);
   };
 
   const handleCloseNotification = () => {
