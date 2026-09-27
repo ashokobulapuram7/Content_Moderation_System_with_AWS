@@ -10,19 +10,8 @@ const ALLOWED_FILE_EXTENSIONS = new Map([
   ['image/png', ['.png']],
   ['video/mp4', ['.mp4']],
 ]);
-const UPLOAD_TIMEOUT_MS = 30000;
-const POLL_TIMEOUT_MS = 10000;
 const POLL_INTERVAL_MS = 5000;
 const MAX_POLL_ATTEMPTS = 20;
-
-const fetchWithTimeout = (url, options, timeoutMs) => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  return fetch(url, { ...options, signal: controller.signal }).finally(() => {
-    clearTimeout(timeoutId);
-  });
-};
 
 const hasAllowedExtension = (file) => {
   const allowedExtensions = ALLOWED_FILE_EXTENSIONS.get(file.type) || [];
@@ -247,11 +236,11 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
         file_content: base64Content,
       };
 
-      fetchWithTimeout(AWSuploadEndpoint, {
+      fetch(AWSuploadEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(fileData),
-      }, UPLOAD_TIMEOUT_MS)
+      })
         .then((response) => {
           if (!response.ok) throw new Error('Upload failed');
           return response.json();
@@ -288,12 +277,12 @@ const UploadPreview = ({ uploadedFile, setUploadedFile, onUpload }) => {
     url.searchParams.set('content_id', contentId);
 
     const poll = () => {
-      fetchWithTimeout(url.toString(), {
+      fetch(url.toString(), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-      }, POLL_TIMEOUT_MS)
+      })
         .then((response) => {
           if (!response.ok) throw new Error('Polling failed');
           return response.json();
